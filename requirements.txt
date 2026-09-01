@@ -1,4 +1,5 @@
+# Minimal requirements for Vercel serverless deployment.
+# No uvicorn, no mangum, no pydub — handler uses Python stdlib only.
+# fastapi kept for local development only.
 fastapi==0.111.0
-mangum==0.17.0
 python-multipart==0.0.9
-SpeechRecognition==3.10.4
