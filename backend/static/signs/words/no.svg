@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="200" viewBox="0 0 160 200">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1e3a5f"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Background -->
+  <rect width="160" height="200" rx="16" fill="url(#bg)" stroke="#e17055" stroke-width="2"/>
+  <!-- Hand shape -->
+  <g transform="translate(80,90)" filter="url(#glow)">
+    <ellipse cx="0" cy="10" rx="55" ry="42" fill="#F4C89A" stroke="#e17055" stroke-width="2.5"/><text x="0" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" font-weight="bold" fill="#e17055">NO</text>
+  </g>
+  <!-- Label -->
+  <text x="80" y="175" text-anchor="middle" font-family="Arial,sans-serif"
+        font-size="28" font-weight="bold" fill="#e17055">NO</text>
+  <!-- ISL tag -->
+  <text x="80" y="195" text-anchor="middle" font-family="Arial,sans-serif"
+        font-size="9" fill="#88aacc">Indian Sign Language</text>
+</svg>

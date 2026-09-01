@@ -1,0 +1,68 @@
+# ── Python ────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+.env
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+
+# ── Environment & secrets ─────────────────────────────────────────────────
+.env
+.env.*
+*.env
+secrets.py
+config_local.py
+credentials.json
+*.key
+*.pem
+*.p12
+*.pfx
+
+# ── IDE / editor ──────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.user
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── OS artifacts ──────────────────────────────────────────────────────────
+desktop.ini
+ehthumbs.db
+
+# ── Project-specific ──────────────────────────────────────────────────────
+# Internal verification / generation scripts (not needed by end users)
+verify.py
+
+# Temporary / test files
+*.tmp
+*.bak
+*.log
+
+# Audio uploads (runtime temp files from speech endpoint)
+*.webm
+*.wav
+*.mp3
+
+# ── Keep these (explicitly tracked) ──────────────────────────────────────
+# backend/static/signs/**  → all SVG assets ARE committed (generated, not sensitive)
+# backend/sign_mapping.json → committed
+# requirements.txt          → committed
+# generate_signs.py         → committed (useful for contributors to regenerate signs)
