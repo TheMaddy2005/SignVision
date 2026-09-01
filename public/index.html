@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SignVision – Indian Sign Language Translator</title>
+  <style>
+    /* ── Reset & base ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0a1a;
+      --surface:   #12122a;
+      --card:      #1a1a3e;
+      --border:    #2a2a5a;
+      --accent:    #e94560;
+      --accent2:   #4ecdc4;
+      --accent3:   #ffd700;
+      --text:      #e8e8f0;
+      --muted:     #8888aa;
+      --radius:    14px;
+      --shadow:    0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated background particles ────────────────────────────────── */
+    #particles {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      overflow: hidden;
+    }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.15;
+      animation: float linear infinite;
+    }
+    @keyframes float {
+      0%   { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+      10%  { opacity: 0.15; }
+      90%  { opacity: 0.15; }
+      100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+    }
+
+    /* ── Layout ────────────────────────────────────────────────────────── */
+    .container {
+      position: relative; z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    /* ── Header ────────────────────────────────────────────────────────── */
+    header {
+      text-align: center;
+      padding: 48px 20px 32px;
+    }
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+    .logo-icon {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 4px 20px rgba(233,69,96,0.4);
+    }
+    .logo-text {
+      font-size: 2.6rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -1px;
+    }
+    .tagline {
+      color: var(--muted);
+      font-size: 1.05rem;
+      margin-top: 6px;
+    }
+    .badges {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .badge {
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .badge-py  { background: rgba(78,205,196,0.15); color: var(--accent2); border: 1px solid var(--accent2); }
+    .badge-js  { background: rgba(255,215,0,0.12);  color: var(--accent3); border: 1px solid var(--accent3); }
+    .badge-isl { background: rgba(233,69,96,0.15);  color: var(--accent);  border: 1px solid var(--accent);  }
+
+    /* ── Main card ─────────────────────────────────────────────────────── */
+    .main-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      box-shadow: var(--shadow);
+      margin-bottom: 28px;
+    }
+
+    /* ── Mode tabs ─────────────────────────────────────────────────────── */
+    .mode-tabs {
+      display: flex;
+      background: var(--card);
+      border-radius: 10px;
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 28px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.92rem;
+      font-weight: 600;
+      transition: all 0.25s;
+      background: transparent;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--accent), #c0304a);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(233,69,96,0.35);
+    }
+    .tab-btn:hover:not(.active) { color: var(--text); background: var(--border); }
+
+    /* ── Text input panel ──────────────────────────────────────────────── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .input-group { margin-bottom: 20px; }
+    .input-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    textarea {
+      width: 100%;
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 100px;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    textarea:focus { border-color: var(--accent); }
+    textarea::placeholder { color: var(--muted); }
+
+    /* ── Quick phrases ──────────────────────────────────────────────────── */
+    .quick-phrases {
+      margin-bottom: 20px;
+    }
+    .quick-label {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .phrase-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chip {
+      padding: 5px 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      color: var(--text);
+      transition: all 0.2s;
+    }
+    .chip:hover {
+      border-color: var(--accent2);
+      color: var(--accent2);
+      background: rgba(78,205,196,0.08);
+    }
+
+    /* ── Buttons ─────────────────────────────────────────────────────── */
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 12px 28px;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #c0304a);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(233,69,96,0.35);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(233,69,96,0.5); }
+    .btn-secondary {
+      background: var(--card);
+      color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--accent2); color: var(--accent2); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+    /* ── Speech panel ────────────────────────────────────────────────── */
+    .speech-area {
+      text-align: center;
+      padding: 20px 0;
+    }
+    .mic-btn {
+      width: 90px; height: 90px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), #c0304a);
+      color: #fff;
+      font-size: 2.2rem;
+      box-shadow: 0 6px 28px rgba(233,69,96,0.45);
+      transition: all 0.25s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .mic-btn:hover { transform: scale(1.07); }
+    .mic-btn.recording {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      animation: pulse-mic 1s infinite;
+    }
+    @keyframes pulse-mic {
+      0%, 100% { box-shadow: 0 6px 28px rgba(231,76,60,0.45); transform: scale(1); }
+      50%       { box-shadow: 0 6px 48px rgba(231,76,60,0.8);  transform: scale(1.05); }
+    }
+    .speech-status {
+      font-size: 0.95rem;
+      color: var(--muted);
+      min-height: 24px;
+    }
+    .speech-status.recording { color: var(--accent); font-weight: 600; }
+    .transcript-box {
+      margin-top: 16px;
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-align: left;
+      min-height: 60px;
+      font-size: 1rem;
+      color: var(--text);
+    }
+    .transcript-box .placeholder { color: var(--muted); font-style: italic; }
+
+    /* ── Waveform visualiser ─────────────────────────────────────────── */
+    #waveform {
+      display: none;
+      width: 100%;
+      height: 60px;
+      border-radius: 8px;
+      margin: 12px 0;
+    }
+    #waveform.active { display: block; }
+
+    /* ── Divider ──────────────────────────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 28px 0;
+    }
+
+    /* ── Sign display area ────────────────────────────────────────────── */
+    .output-section { }
+    .output-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .output-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sign-counter {
+      font-size: 0.82rem;
+      color: var(--muted);
+      background: var(--card);
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+
+    /* playback controls */
+    .playback-controls {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .playback-controls.visible { display: flex; }
+    .speed-label {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .speed-select {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+    .btn-play {
+      padding: 7px 18px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: linear-gradient(135deg, var(--accent2), #2db3aa);
+      color: #fff;
+    }
+    .btn-play:hover { transform: translateY(-1px); }
+    .btn-play:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* sign grid */
+    .signs-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      min-height: 80px;
+      align-items: flex-start;
+    }
+    .sign-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px;
+      text-align: center;
+      transition: all 0.3s;
+      cursor: default;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .sign-card img {
+      width: 100px;
+      height: 125px;
+      display: block;
+      border-radius: 8px;
+    }
+    .sign-card .sign-label {
+      margin-top: 6px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .sign-card.highlighted {
+      border-color: var(--accent2);
+      box-shadow: 0 0 20px rgba(78,205,196,0.4);
+      transform: translateY(-4px) scale(1.04);
+    }
+    .sign-card.highlighted .sign-label { color: var(--accent2); }
+    .sign-card.word-card { border-color: rgba(233,69,96,0.4); }
+    .sign-card.word-card .sign-label { color: var(--accent); }
+
+    .space-marker {
+      width: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--border);
+      font-size: 1.4rem;
+      align-self: center;
+    }
+
+    /* empty state */
+    .empty-state {
+      width: 100%;
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+    .empty-text { font-size: 0.95rem; }
+
+    /* ── Loading spinner ──────────────────────────────────────────────── */
+    .spinner {
+      display: none;
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 20px auto;
+    }
+    .spinner.active { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast notifications ──────────────────────────────────────────── */
+    #toast-container {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-size: 0.9rem;
+      max-width: 320px;
+      animation: slide-in 0.3s ease;
+      box-shadow: var(--shadow);
+    }
+    .toast.error  { border-color: var(--accent);  color: var(--accent); }
+    .toast.success{ border-color: var(--accent2); color: var(--accent2); }
+    @keyframes slide-in {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0);   opacity: 1; }
+    }
+
+    /* ── Stats bar ────────────────────────────────────────────────────── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-top: 4px;
+    }
+
+    /* ── Footer ───────────────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      border-top: 1px solid var(--border);
+      position: relative; z-index: 1;
+    }
+    footer span { color: var(--accent); }
+
+    /* ── Responsive ───────────────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .logo-text { font-size: 2rem; }
+      .stats-bar { grid-template-columns: 1fr 1fr; }
+      .main-card { padding: 20px; }
+      .tab-btn span.tab-label { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Animated background -->
+<div id="particles"></div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<div class="container">
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🤟</div>
+      <div class="logo-text">SignVision</div>
+    </div>
+    <p class="tagline">AI-Based Indian Sign Language Translator</p>
+    <div class="badges">
+      <span class="badge badge-py">Python · FastAPI</span>
+      <span class="badge badge-js">HTML · JavaScript</span>
+      <span class="badge badge-isl">Indian Sign Language</span>
+    </div>
+  </header>
+
+  <!-- ── Stats bar ── -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-value" id="stat-alpha">26</div>
+      <div class="stat-label">Alphabets</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-words">24</div>
+      <div class="stat-label">ISL Words</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-translated">0</div>
+      <div class="stat-label">Translated</div>
+    </div>
+  </div>
+
+  <!-- ── Main card ── -->
+  <div class="main-card">
+
+    <!-- Mode tabs -->
+    <div class="mode-tabs">
+      <button class="tab-btn active" data-tab="text" onclick="switchTab('text')">
+        ✍️ <span class="tab-label">Text Input</span>
+      </button>
+      <button class="tab-btn" data-tab="speech" onclick="switchTab('speech')">
+        🎤 <span class="tab-label">Speech Input</span>
+      </button>
+      <button class="tab-btn" data-tab="fingerspell" onclick="switchTab('fingerspell')">
+        🖐️ <span class="tab-label">Fingerspell</span>
+      </button>
+    </div>
+
+    <!-- ── Text panel ── -->
+    <div class="panel active" id="panel-text">
+      <div class="input-group">
+        <label class="input-label" for="text-input">Enter text to translate</label>
+        <textarea id="text-input" rows="3"
+          placeholder="Type a word, sentence, or phrase… e.g. 'Hello, my name is India'"
+          maxlength="500"></textarea>
+        <div style="text-align:right;font-size:0.78rem;color:var(--muted);margin-top:4px;">
+          <span id="char-count">0</span>/500
+        </div>
+      </div>
+
+      <div class="quick-phrases">
+        <div class="quick-label">Quick phrases</div>
+        <div class="phrase-chips">
+          <span class="chip" onclick="setPhrase('Hello')">Hello</span>
+          <span class="chip" onclick="setPhrase('Thank you')">Thank you</span>
+          <span class="chip" onclick="setPhrase('My name is India')">My name is India</span>
+          <span class="chip" onclick="setPhrase('Please help me')">Please help me</span>
+          <span class="chip" onclick="setPhrase('I love you')">I love you</span>
+          <span class="chip" onclick="setPhrase('Good morning')">Good morning</span>
+          <span class="chip" onclick="setPhrase('Namaste')">Namaste</span>
+          <span class="chip" onclick="setPhrase('Welcome to school')">Welcome to school</span>
+          <span class="chip" onclick="setPhrase('Yes please')">Yes please</span>
+          <span class="chip" onclick="setPhrase('No sorry')">No sorry</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="translateText()">
+          🤟 Translate to ISL
+        </button>
+        <button class="btn btn-secondary" onclick="clearAll()">
+          ✕ Clear
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Speech panel ── -->
+    <div class="panel" id="panel-speech">
+      <div class="speech-area">
+        <button class="mic-btn" id="mic-btn" onclick="toggleRecording()">🎤</button>
+        <p class="speech-status" id="speech-status">Click the microphone to start speaking</p>
+        <canvas id="waveform"></canvas>
+        <div class="transcript-box" id="transcript-box">
+          <span class="placeholder">Your speech will appear here after recognition…</span>
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top:16px;">
+        <button class="btn btn-primary" id="btn-translate-speech" onclick="translateTranscript()" disabled>
+          🤟 Translate Speech
+        </button>
+        <button class="btn btn-secondary" onclick="clearSpeech()">✕ Clear</button>
+      </div>
+    </div>
+
+    <!-- ── Fingerspell panel ── -->
+    <div class="panel" id="panel-fingerspell">
+      <div class="input-group">
+        <label class="input-label">Type a word — see each letter signed in real time</label>
+        <textarea id="finger-input" rows="2"
+          placeholder="Type any word or sentence…"
+          oninput="fingerspellLive(this.value)" maxlength="200"></textarea>
+      </div>
+      <div id="fingerspell-grid" class="signs-grid">
+        <div class="empty-state">
+          <div class="empty-icon">🖐️</div>
+          <div class="empty-text">Start typing to see fingerspelling</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ── Output section ── -->
+    <div class="output-section">
+      <div class="output-header">
+        <div class="output-title">🤟 Sign Language Output <span class="sign-counter" id="sign-counter">0 signs</span></div>
+        <div class="playback-controls" id="playback-controls">
+          <span class="speed-label">Speed:</span>
+          <select class="speed-select" id="speed-select">
+            <option value="2000">Slow</option>
+            <option value="1000" selected>Normal</option>
+            <option value="500">Fast</option>
+          </select>
+          <button class="btn-play" id="btn-play" onclick="playAnimation()">▶ Play</button>
+          <button class="btn-play" style="background:var(--card);color:var(--text);border:1px solid var(--border);" onclick="stopAnimation()">■ Stop</button>
+        </div>
+      </div>
+
+      <div class="spinner" id="spinner"></div>
+
+      <div class="signs-grid" id="signs-grid">
+        <div class="empty-state">
+          <div class="empty-icon">🤟</div>
+          <div class="empty-text">Translated signs will appear here</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<footer>
+  <p>SignVision &mdash; AI-Based Indian Sign Language Translator &nbsp;|&nbsp;
+     Built with <span>♥</span> using Python · FastAPI · HTML · JavaScript</p>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   SignVision – Frontend Logic
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const API = '';   // same origin
+
+// ── Global state ─────────────────────────────────────────────────────────
+let currentSigns      = [];
+let animationTimer    = null;
+let animIndex         = 0;
+let totalTranslated   = 0;
+let mediaRecorder     = null;
+let audioChunks       = [];
+let isRecording       = false;
+let currentTranscript = '';
+let audioCtx          = null;
+let analyser          = null;
+let waveAnimFrame     = null;
+let micStream         = null;   // fix #1: store stream so tracks can be stopped
+
+// ── Particles ─────────────────────────────────────────────────────────────
+(function spawnParticles() {
+  const container = document.getElementById('particles');
+  const colors = ['#e94560','#4ecdc4','#ffd700','#6c5ce7','#00b894'];
+  for (let i = 0; i < 25; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 10 + 4;
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${Math.random()*18+10}s;
+      animation-delay:${Math.random()*10}s;
+    `;
+    container.appendChild(p);
+  }
+})();
+
+// ── Tab switching ─────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+}
+
+// ── Char counter ──────────────────────────────────────────────────────────
+document.getElementById('text-input').addEventListener('input', function() {
+  document.getElementById('char-count').textContent = this.value.length;
+});
+
+// ── Quick phrase chips ────────────────────────────────────────────────────
+function setPhrase(text) {
+  document.getElementById('text-input').value = text;
+  document.getElementById('char-count').textContent = text.length;
+  switchTab('text');
+}
+
+// ── Toast notifications ───────────────────────────────────────────────────
+function toast(msg, type = 'info', duration = 3500) {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(120%)';
+    setTimeout(() => t.remove(), 300); }, duration);
+}
+
+// ── Spinner ───────────────────────────────────────────────────────────────
+function showSpinner(show) {
+  document.getElementById('spinner').classList.toggle('active', show);
+  document.getElementById('signs-grid').style.opacity = show ? '0.3' : '1';
+}
+
+// ── Render sign cards ─────────────────────────────────────────────────────
+function renderSigns(signs, targetId = 'signs-grid') {
+  const grid = document.getElementById(targetId);
+  grid.innerHTML = '';
+
+  if (!signs || signs.length === 0) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🤷</div>
+      <div class="empty-text">No signs found for this input.</div></div>`;
+    return;
+  }
+
+  signs.forEach((sign, idx) => {
+    if (sign.type === 'space') {
+      const sp = document.createElement('div');
+      sp.className = 'space-marker';
+      sp.textContent = '|';
+      grid.appendChild(sp);
+      return;
+    }
+    const card = document.createElement('div');
+    card.className = 'sign-card' + (sign.type === 'word' ? ' word-card' : '');
+    card.dataset.index = idx;
+
+    const img = document.createElement('img');
+    img.src = sign.url;
+    img.alt = sign.label;
+    img.loading = 'lazy';
+    img.onerror = () => { img.style.display='none'; };
+
+    const lbl = document.createElement('div');
+    lbl.className = 'sign-label';
+    lbl.textContent = sign.label;
+
+    card.appendChild(img);
+    card.appendChild(lbl);
+    grid.appendChild(card);
+  });
+
+  // Update counter & controls — fix #4: only touch main output controls when rendering there
+  const count = signs.filter(s => s.type !== 'space').length;
+  if (targetId === 'signs-grid') {
+    document.getElementById('sign-counter').textContent = count + ' sign' + (count !== 1 ? 's' : '');
+    document.getElementById('playback-controls').classList.toggle('visible', count > 0);
+  }
+}
+
+// ── Translate text ────────────────────────────────────────────────────────
+async function translateText() {
+  const text = document.getElementById('text-input').value.trim();
+  if (!text) { toast('Please enter some text first.', 'error'); return; }
+
+  showSpinner(true);
+  stopAnimation();
+
+  try {
+    const res = await fetch(`${API}/api/translate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Translation failed');
+    }
+    const data = await res.json();
+    currentSigns = data.signs;
+    renderSigns(currentSigns);
+    totalTranslated += data.sign_count;
+    document.getElementById('stat-translated').textContent = totalTranslated;
+    toast(`Translated ${data.sign_count} signs!`, 'success');
+  } catch(e) {
+    toast(e.message, 'error');
+  } finally {
+    showSpinner(false);
+  }
+}
+
+// ── Clear ─────────────────────────────────────────────────────────────────
+function clearAll() {
+  document.getElementById('text-input').value = '';
+  document.getElementById('char-count').textContent = '0';
+  currentSigns = [];
+  stopAnimation();
+  document.getElementById('signs-grid').innerHTML = `<div class="empty-state">
+    <div class="empty-icon">🤟</div>
+    <div class="empty-text">Translated signs will appear here</div></div>`;
+  document.getElementById('sign-counter').textContent = '0 signs';
+  document.getElementById('playback-controls').classList.remove('visible');
+}
+
+// ── Animated playback ─────────────────────────────────────────────────────
+function playAnimation() {
+  stopAnimation();
+  const cards = document.querySelectorAll('#signs-grid .sign-card');
+  if (!cards.length) return;
+  animIndex = 0;
+  const speed = parseInt(document.getElementById('speed-select').value);
+  document.getElementById('btn-play').disabled = true;
+
+  function highlight(i) {
+    cards.forEach(c => c.classList.remove('highlighted'));
+    if (i < cards.length) {
+      cards[i].classList.add('highlighted');
+      cards[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      animationTimer = setTimeout(() => highlight(i + 1), speed);
+    } else {
+      document.getElementById('btn-play').disabled = false;
+    }
+  }
+  highlight(0);
+}
+
+function stopAnimation() {
+  if (animationTimer) { clearTimeout(animationTimer); animationTimer = null; }
+  document.querySelectorAll('#signs-grid .sign-card').forEach(c => c.classList.remove('highlighted'));
+  const btn = document.getElementById('btn-play');
+  if (btn) btn.disabled = false;
+}
+
+// ── Speech recognition (Web Speech API — real-time, no backend needed) ────
+let recognition = null;
+let speechTranscript = '';
+
+function toggleRecording() {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+}
+
+function startRecording() {
+  // Prefer Web Speech API (real-time, no backend round-trip needed)
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    // Fallback: MediaRecorder → backend
+    startMediaRecorder();
+    return;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.lang = 'en-IN';
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    isRecording = true;
+    const btn = document.getElementById('mic-btn');
+    btn.classList.add('recording');
+    btn.textContent = '⏹';
+    setStatus('🔴 Listening… speak now', true);
+    startWaveform();
+  };
+
+  recognition.onresult = (event) => {
+    let interim = '';
+    let final = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      if (event.results[i].isFinal) {
+        final += event.results[i][0].transcript + ' ';
+      } else {
+        interim += event.results[i][0].transcript;
+      }
+    }
+    speechTranscript += final;
+    currentTranscript = (speechTranscript + interim).trim();
+    const box = document.getElementById('transcript-box');
+    box.innerHTML = currentTranscript
+      ? `<strong>${speechTranscript.trim()}</strong> <em style="color:var(--muted)">${interim}</em>`
+      : '<span class="placeholder">Speak now…</span>';
+  };
+
+  recognition.onerror = (e) => {
+    if (e.error === 'aborted') return;   // fix #2: aborted is triggered by our own stopRecording(); ignore it
+    toast('Speech error: ' + e.error, 'error');
+    stopRecording();
+  };
+
+  recognition.onend = () => {
+    if (isRecording) recognition.start(); // keep going until user stops
+  };
+
+  speechTranscript = '';
+  recognition.start();
+}
+
+function stopRecording() {
+  isRecording = false;
+  if (recognition) { recognition.abort(); recognition = null; }
+  stopWaveform();
+  const btn = document.getElementById('mic-btn');
+  btn.classList.remove('recording');
+  btn.textContent = '🎤';
+  setStatus('Click the microphone to start speaking');
+
+  currentTranscript = speechTranscript.trim();
+  if (currentTranscript) {
+    document.getElementById('btn-translate-speech').disabled = false;
+    toast('Speech captured! Click "Translate Speech".', 'success');
+  }
+}
+
+function setStatus(msg, active = false) {
+  const el = document.getElementById('speech-status');
+  el.textContent = msg;
+  el.className = 'speech-status' + (active ? ' recording' : '');
+}
+
+// Waveform via Web Audio API
+function startWaveform() {
+  const canvas = document.getElementById('waveform');
+  canvas.classList.add('active');
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    micStream = stream;   // fix #1: store so we can stop tracks later
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    const src = audioCtx.createMediaStreamSource(stream);
+    src.connect(analyser);
+    drawWave(canvas, analyser);
+  }).catch(() => {});
+}
+
+function stopWaveform() {
+  const canvas = document.getElementById('waveform');
+  canvas.classList.remove('active');
+  if (waveAnimFrame) { cancelAnimationFrame(waveAnimFrame); waveAnimFrame = null; }
+  if (audioCtx) { audioCtx.close(); audioCtx = null; analyser = null; }
+  // fix #1: stop mic tracks so the browser recording indicator goes away
+  if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+}
+
+function drawWave(canvas, analyser) {
+  // fix #3: sync canvas buffer size to its rendered CSS size before drawing
+  canvas.width  = canvas.offsetWidth  || 800;
+  canvas.height = canvas.offsetHeight || 60;
+  const ctx = canvas.getContext('2d');
+  const buf = new Uint8Array(analyser.frequencyBinCount);
+  function draw() {
+    waveAnimFrame = requestAnimationFrame(draw);
+    analyser.getByteTimeDomainData(buf);
+    ctx.fillStyle = '#12122a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#e94560';
+    ctx.beginPath();
+    const sliceWidth = canvas.width / buf.length;
+    let x = 0;
+    for (let i = 0; i < buf.length; i++) {
+      const v = buf[i] / 128;
+      const y = v * canvas.height / 2;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      x += sliceWidth;
+    }
+    ctx.lineTo(canvas.width, canvas.height / 2);
+    ctx.stroke();
+  }
+  draw();
+}
+
+// Fallback: MediaRecorder → backend
+function startMediaRecorder() {
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    micStream = stream;   // fix #1: store for cleanup
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = sendAudioToBackend;
+    mediaRecorder.start();
+    isRecording = true;
+    document.getElementById('mic-btn').classList.add('recording');
+    document.getElementById('mic-btn').textContent = '⏹';
+    setStatus('🔴 Recording…', true);
+    startWaveform();
+  }).catch(() => toast('Microphone access denied.', 'error'));
+}
+
+async function sendAudioToBackend() {
+  // fix #6: don't send if no audio was captured
+  if (!audioChunks.length) {
+    toast('No audio captured. Try speaking for longer.', 'error');
+    setStatus('Click the microphone to start speaking');
+    return;
+  }
+  const blob = new Blob(audioChunks, { type: 'audio/webm' });
+  const form = new FormData();
+  form.append('audio', blob, 'recording.webm');
+  setStatus('Processing speech…');
+  try {
+    const res = await fetch(`${API}/api/speech-to-text`, { method: 'POST', body: form });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.detail); }
+    const data = await res.json();
+    currentTranscript = data.transcript;
+    document.getElementById('transcript-box').textContent = currentTranscript;
+    document.getElementById('btn-translate-speech').disabled = false;
+    toast('Speech recognised!', 'success');
+  } catch(e) {
+    toast(e.message, 'error');
+    setStatus('Recognition failed. Try again.');
+  }
+}
+
+async function translateTranscript() {
+  if (!currentTranscript || !currentTranscript.trim()) { toast('No speech transcript to translate.', 'error'); return; }
+  showSpinner(true);
+  stopAnimation();
+  try {
+    const res = await fetch(`${API}/api/translate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: currentTranscript })
+    });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.detail); }
+    const data = await res.json();
+    currentSigns = data.signs;
+    renderSigns(currentSigns);
+    totalTranslated += data.sign_count;
+    document.getElementById('stat-translated').textContent = totalTranslated;
+    toast(`Translated ${data.sign_count} signs!`, 'success');
+  } catch(e) {
+    toast(e.message, 'error');
+  } finally {
+    showSpinner(false);
+  }
+}
+
+function clearSpeech() {
+  stopRecording();
+  currentTranscript = '';
+  speechTranscript = '';
+  document.getElementById('transcript-box').innerHTML = '<span class="placeholder">Your speech will appear here after recognition…</span>';
+  document.getElementById('btn-translate-speech').disabled = true;
+  setStatus('Click the microphone to start speaking');
+}
+
+// ── Fingerspell live preview ───────────────────────────────────────────────
+let fsDebounce = null;
+function fingerspellLive(text) {
+  clearTimeout(fsDebounce);
+  fsDebounce = setTimeout(async () => {
+    if (!text.trim()) {
+      document.getElementById('fingerspell-grid').innerHTML = `<div class="empty-state">
+        <div class="empty-icon">🖐️</div>
+        <div class="empty-text">Start typing to see fingerspelling</div></div>`;
+      return;
+    }
+    try {
+      const res = await fetch(`${API}/api/translate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      const data = await res.json();
+      renderSigns(data.signs, 'fingerspell-grid');
+    } catch(e) {}
+  }, 300);
+}
+
+// ── Enter key to translate ────────────────────────────────────────────────
+document.getElementById('text-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); translateText(); }
+});
+
+// ── Load stats from API ───────────────────────────────────────────────────
+fetch(`${API}/api/mapping`).then(r => r.json()).then(m => {
+  document.getElementById('stat-alpha').textContent = Object.keys(m.alphabets || {}).length;
+  document.getElementById('stat-words').textContent  = Object.keys(m.words || {}).length;
+}).catch(() => {});
+</script>
+</body>
+</html>

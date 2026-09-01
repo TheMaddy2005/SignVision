@@ -64,5 +64,8 @@ verify.py
 # ── Keep these (explicitly tracked) ──────────────────────────────────────
 # backend/static/signs/**  → all SVG assets ARE committed (generated, not sensitive)
 # backend/sign_mapping.json → committed
+# api/sign_mapping.json     → committed (Vercel deployment copy)
+# public/                   → committed (Vercel static assets)
 # requirements.txt          → committed
+# vercel.json               → committed
 # generate_signs.py         → committed (useful for contributors to regenerate signs)
