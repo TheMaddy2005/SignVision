@@ -4,15 +4,32 @@
     {
       "src": "app.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
-    { "src": "/health", "dest": "app.py" },
-    { "src": "/api/mapping", "dest": "app.py" },
-    { "src": "/api/translate", "dest": "app.py" },
-    { "src": "/api/speech-to-text", "dest": "app.py" },
-    { "src": "/static/signs/(.*)", "dest": "/public/signs/$1" },
-    { "src": "/(.*\\.(svg|png|jpg|jpeg|gif|ico|css|js))", "dest": "/public/$1" },
-    { "src": "/(.*)", "dest": "/public/index.html" }
+    {
+      "src": "/health",
+      "dest": "app.py"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "app.py"
+    },
+    {
+      "src": "/signs/(.*)",
+      "dest": "/public/signs/$1"
+    },
+    {
+      "src": "/(.*\\.(svg|png|jpg|jpeg|gif|ico|css|js|json))",
+      "dest": "/public/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/index.html"
+    }
   ]
 }

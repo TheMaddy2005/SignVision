@@ -23,12 +23,11 @@ app.add_middleware(
 def _load_map() -> dict:
     # Vercel CWD is /var/task (repo root). Try all possible locations.
     candidates = [
-        os.path.join(os.getcwd(), "api", "sign_mapping.json"),
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), "api", "sign_mapping.json"),
         os.path.join(os.getcwd(), "sign_mapping.json"),
         os.path.join(os.path.dirname(os.path.abspath(__file__)), "sign_mapping.json"),
-        "/var/task/api/sign_mapping.json",
+        os.path.join(os.getcwd(), "api", "sign_mapping.json"),
         "/var/task/sign_mapping.json",
+        "/var/task/api/sign_mapping.json",
     ]
     for path in candidates:
         if os.path.isfile(path):
