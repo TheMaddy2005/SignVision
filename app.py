@@ -1,9 +1,7 @@
 """
 SignVision – Vercel Entrypoint (app.py)
-- Vercel detects `app` (FastAPI ASGI instance) automatically.
-- Handles /api/* and /health ONLY.
-- NO catch-all route — Vercel CDN serves public/ for everything else.
-- NO StaticFiles mount — Vercel CDN handles /signs/** from public/signs/.
+Vercel auto-detects `app` (FastAPI ASGI instance).
+Handles /api/* and /health only — no static file serving.
 """
 import os, json, re
 from fastapi import FastAPI, HTTPException
@@ -21,11 +19,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Sign mapping ──────────────────────────────────────────────────────────────
-_MAP_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "api", "sign_mapping.json")
-with open(_MAP_PATH, "r") as _f:
-    SIGN_MAP = json.load(_f)
+# ── Sign mapping — try multiple paths for Vercel compatibility ────────────────
+def _load_map() -> dict:
+    # Vercel CWD is /var/task (repo root). Try all possible locations.
+    candidates = [
+        os.path.join(os.getcwd(), "api", "sign_mapping.json"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "api", "sign_mapping.json"),
+        os.path.join(os.getcwd(), "sign_mapping.json"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "sign_mapping.json"),
+        "/var/task/api/sign_mapping.json",
+        "/var/task/sign_mapping.json",
+    ]
+    for path in candidates:
+        if os.path.isfile(path):
+            with open(path, "r") as f:
+                return json.load(f)
+    # Fallback: return empty map rather than crash
+    return {"alphabets": {}, "numbers": {}, "words": {}}
 
+SIGN_MAP    = _load_map()
 WORD_SIGNS  = {k.lower(): v for k, v in SIGN_MAP.get("words",     {}).items()}
 ALPHA_SIGNS = {k.upper(): v for k, v in SIGN_MAP.get("alphabets", {}).items()}
 NUM_SIGNS   = {k:          v for k, v in SIGN_MAP.get("numbers",   {}).items()}
@@ -62,7 +74,24 @@ class TranslateRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "SignVision"}
+    """Health check — also exposes debug info to diagnose path issues."""
+    cwd = os.getcwd()
+    file_dir = os.path.dirname(os.path.abspath(__file__))
+    map_loaded = bool(SIGN_MAP.get("alphabets"))
+    # List files in cwd for debugging
+    try:
+        cwd_files = os.listdir(cwd)
+    except Exception:
+        cwd_files = []
+    return {
+        "status": "ok",
+        "service": "SignVision",
+        "sign_map_loaded": map_loaded,
+        "sign_count": len(SIGN_MAP.get("alphabets", {})),
+        "cwd": cwd,
+        "file_dir": file_dir,
+        "cwd_files": cwd_files[:20],
+    }
 
 @app.get("/api/mapping")
 def get_mapping():
