@@ -3,11 +3,10 @@
   "builds": [
     {
       "src": "app.py",
-      "use": "@vercel/python",
-      "config": { "maxLambdaSize": "15mb" }
+      "use": "@vercel/python"
     },
     {
-      "src": "public/**",
+      "src": "public/**/*",
       "use": "@vercel/static"
     }
   ],
@@ -17,16 +16,28 @@
       "dest": "/app.py"
     },
     {
-      "src": "/api/(.*)",
+      "src": "/api/mapping",
       "dest": "/app.py"
     },
     {
-      "src": "/signs/(.*)",
-      "dest": "/public/signs/$1"
+      "src": "/api/translate",
+      "dest": "/app.py"
     },
     {
-      "src": "/(.*\\.(svg|ico|png|css|js|woff|woff2))",
-      "dest": "/public/$1"
+      "src": "/api/speech-to-text",
+      "dest": "/app.py"
+    },
+    {
+      "src": "/signs/alphabets/(.*)",
+      "dest": "/public/signs/alphabets/$1"
+    },
+    {
+      "src": "/signs/numbers/(.*)",
+      "dest": "/public/signs/numbers/$1"
+    },
+    {
+      "src": "/signs/words/(.*)",
+      "dest": "/public/signs/words/$1"
     },
     {
       "src": "/(.*)",

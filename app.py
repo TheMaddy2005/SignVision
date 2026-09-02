@@ -1,8 +1,9 @@
 """
 SignVision – Vercel Entrypoint (app.py)
-Vercel auto-detects the `app` variable (FastAPI ASGI instance).
-- API routes only — NO static file serving (Vercel CDN handles public/)
-- sign_mapping.json is read from api/sign_mapping.json (co-located data file)
+- Vercel detects `app` (FastAPI ASGI instance) automatically.
+- Handles /api/* and /health ONLY.
+- NO catch-all route — Vercel CDN serves public/ for everything else.
+- NO StaticFiles mount — Vercel CDN handles /signs/** from public/signs/.
 """
 import os, json, re
 from fastapi import FastAPI, HTTPException
@@ -21,7 +22,6 @@ app.add_middleware(
 )
 
 # ── Sign mapping ──────────────────────────────────────────────────────────────
-# __file__ is app.py at repo root. sign_mapping.json is in api/
 _MAP_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "api", "sign_mapping.json")
 with open(_MAP_PATH, "r") as _f:
     SIGN_MAP = json.load(_f)
@@ -56,7 +56,7 @@ def text_to_signs(text: str) -> list:
         i += 1
     return results
 
-# ── API Routes ────────────────────────────────────────────────────────────────
+# ── Routes ────────────────────────────────────────────────────────────────────
 class TranslateRequest(BaseModel):
     text: str
 
@@ -86,5 +86,5 @@ def speech_to_text():
     raise HTTPException(
         status_code=501,
         detail="Backend speech recognition is not available on Vercel. "
-               "The app uses your browser's built-in Web Speech API instead."
+               "Use your browser's built-in Web Speech API instead."
     )
