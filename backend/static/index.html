@@ -823,6 +823,13 @@ async function translateText() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text })
     });
+    
+    // Check content type before parsing
+    const contentType = res.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Backend server not responding correctly. Please ensure the server is running on port 8000.');
+    }
+    
     if (!res.ok) {
       const err = await res.json();
       throw new Error(err.detail || 'Translation failed');
@@ -834,7 +841,8 @@ async function translateText() {
     document.getElementById('stat-translated').textContent = totalTranslated;
     toast(`Translated ${data.sign_count} signs!`, 'success');
   } catch(e) {
-    toast(e.message, 'error');
+    console.error('Translation error:', e);
+    toast(e.message || 'Server connection failed. Make sure backend is running.', 'error');
   } finally {
     showSpinner(false);
   }
@@ -1117,9 +1125,19 @@ function fingerspellLive(text) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text })
       });
+      
+      // Check content type
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Backend server not responding correctly');
+        return;
+      }
+      
       const data = await res.json();
       renderSigns(data.signs, 'fingerspell-grid');
-    } catch(e) {}
+    } catch(e) {
+      console.error('Fingerspell error:', e);
+    }
   }, 300);
 }
 
