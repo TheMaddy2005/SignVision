@@ -1,13 +1,13 @@
 """
-SignVision – Vercel Entrypoint
-Vercel detects `app` (FastAPI instance) in app.py automatically.
-No Mangum, no BaseHTTPRequestHandler, no builds config needed.
+SignVision – Vercel Entrypoint (app.py)
+Vercel auto-detects the `app` variable (FastAPI ASGI instance).
+- API routes only — NO static file serving (Vercel CDN handles public/)
+- sign_mapping.json is read from api/sign_mapping.json (co-located data file)
 """
 import os, json, re
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 # ── App ───────────────────────────────────────────────────────────────────────
@@ -21,16 +21,16 @@ app.add_middleware(
 )
 
 # ── Sign mapping ──────────────────────────────────────────────────────────────
-# Vercel CWD is the project root, so path is relative to root
-_MAP = os.path.join(os.path.dirname(__file__), "api", "sign_mapping.json")
-with open(_MAP, "r") as f:
-    SIGN_MAP = json.load(f)
+# __file__ is app.py at repo root. sign_mapping.json is in api/
+_MAP_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "api", "sign_mapping.json")
+with open(_MAP_PATH, "r") as _f:
+    SIGN_MAP = json.load(_f)
 
 WORD_SIGNS  = {k.lower(): v for k, v in SIGN_MAP.get("words",     {}).items()}
 ALPHA_SIGNS = {k.upper(): v for k, v in SIGN_MAP.get("alphabets", {}).items()}
 NUM_SIGNS   = {k:          v for k, v in SIGN_MAP.get("numbers",   {}).items()}
 
-# ── Translation ───────────────────────────────────────────────────────────────
+# ── Translation logic ─────────────────────────────────────────────────────────
 def text_to_signs(text: str) -> list:
     words = re.findall(r"[a-zA-Z0-9]+", text.lower())
     results = []
@@ -56,7 +56,7 @@ def text_to_signs(text: str) -> list:
         i += 1
     return results
 
-# ── Routes ────────────────────────────────────────────────────────────────────
+# ── API Routes ────────────────────────────────────────────────────────────────
 class TranslateRequest(BaseModel):
     text: str
 
@@ -86,17 +86,5 @@ def speech_to_text():
     raise HTTPException(
         status_code=501,
         detail="Backend speech recognition is not available on Vercel. "
-               "Use your browser's built-in Web Speech API instead."
+               "The app uses your browser's built-in Web Speech API instead."
     )
-
-# ── Serve static files (SVG signs + frontend) ────────────────────────────────
-_PUBLIC = os.path.join(os.path.dirname(__file__), "public")
-if os.path.isdir(_PUBLIC):
-    app.mount("/signs", StaticFiles(directory=os.path.join(_PUBLIC, "signs")), name="signs")
-
-@app.get("/{full_path:path}", include_in_schema=False)
-def spa(full_path: str):
-    index = os.path.join(_PUBLIC, "index.html")
-    if os.path.isfile(index):
-        return FileResponse(index)
-    return JSONResponse({"message": "SignVision API is running."})

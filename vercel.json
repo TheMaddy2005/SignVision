@@ -1,6 +1,36 @@
 {
   "version": 2,
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+  "builds": [
+    {
+      "src": "app.py",
+      "use": "@vercel/python",
+      "config": { "maxLambdaSize": "15mb" }
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/health",
+      "dest": "/app.py"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/app.py"
+    },
+    {
+      "src": "/signs/(.*)",
+      "dest": "/public/signs/$1"
+    },
+    {
+      "src": "/(.*\\.(svg|ico|png|css|js|woff|woff2))",
+      "dest": "/public/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/index.html"
+    }
   ]
 }

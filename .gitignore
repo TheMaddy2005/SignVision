@@ -48,8 +48,11 @@ desktop.ini
 ehthumbs.db
 
 # ── Project-specific ──────────────────────────────────────────────────────
-# Internal verification / generation scripts (not needed by end users)
+# Internal scripts (not needed by end users or Vercel)
 verify.py
+push_fix.py
+commit_vercel.py
+push.py
 
 # Temporary / test files
 *.tmp
