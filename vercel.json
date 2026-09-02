@@ -1,13 +1,8 @@
 {
-  "version": 2,
   "builds": [
     {
       "src": "app.py",
       "use": "@vercel/python"
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -16,7 +11,15 @@
       "dest": "app.py"
     },
     {
-      "src": "/api/(.*)",
+      "src": "/api/mapping",
+      "dest": "app.py"
+    },
+    {
+      "src": "/api/translate",
+      "dest": "app.py"
+    },
+    {
+      "src": "/api/speech-to-text",
       "dest": "app.py"
     },
     {
@@ -24,7 +27,7 @@
       "dest": "/public/signs/$1"
     },
     {
-      "src": "/(.*\\.(svg|png|jpg|jpeg|gif|ico|css|js|json))",
+      "src": "/(.*\\.(svg|png|jpg|jpeg|gif|ico|css|js))",
       "dest": "/public/$1"
     },
     {
