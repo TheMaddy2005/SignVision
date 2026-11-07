@@ -6,7 +6,7 @@ Handles /api/* and /health only — no static file serving.
 import os, json, re
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 # ── App ───────────────────────────────────────────────────────────────────────
@@ -71,18 +71,8 @@ def text_to_signs(text: str) -> list:
 class TranslateRequest(BaseModel):
     text: str
 
-# ── Frontend: serve the single-page app at / ─────────────────────────────────
-@app.get("/")
-def index():
-    here = os.path.dirname(os.path.abspath(__file__))
-    for p in (os.path.join(here, "public", "index.html"),
-              "/var/task/public/index.html"):
-        if os.path.isfile(p):
-            return FileResponse(p)
-    raise HTTPException(status_code=404, detail="public/index.html not found")
-
-
 @app.get("/health")
+@app.get("/api/health")
 def health():
     """Health check — also exposes debug info to diagnose path issues."""
     cwd = os.getcwd()

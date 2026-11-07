@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/signs/(.*)", "destination": "/public/signs/$1" },
-    { "source": "/((?!public/).*)", "destination": "/api/index" }
+    { "source": "/health", "destination": "/api/health" },
+    { "source": "/", "destination": "/public/index.html" }
   ]
 }
