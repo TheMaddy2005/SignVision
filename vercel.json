@@ -2,6 +2,8 @@
   "rewrites": [
     { "source": "/signs/(.*)", "destination": "/public/signs/$1" },
     { "source": "/health", "destination": "/api/health" },
+    { "source": "/sitemap.xml", "destination": "/public/sitemap.xml" },
+    { "source": "/robots.txt", "destination": "/public/robots.txt" },
     { "source": "/", "destination": "/public/index.html" }
   ]
 }
