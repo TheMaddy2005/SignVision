@@ -4,6 +4,7 @@
     { "source": "/health", "destination": "/api/health" },
     { "source": "/sitemap.xml", "destination": "/public/sitemap.xml" },
     { "source": "/robots.txt", "destination": "/public/robots.txt" },
+    { "source": "/google02ccdf880356c2d8.html", "destination": "/public/google02ccdf880356c2d8.html" },
     { "source": "/", "destination": "/public/index.html" }
   ]
 }
