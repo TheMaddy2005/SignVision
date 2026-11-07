@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://sign-vision-tau.vercel.app/sitemap.xml
