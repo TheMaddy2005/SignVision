@@ -10,6 +10,12 @@
 
 ---
 
+## 🌐 Live Demo
+
+**https://sign-vision-tau.vercel.app** - hosted free on Vercel (FastAPI serverless functions + static frontend, deployed from this repo's `main` branch).
+
+---
+
 ## 📌 Project Overview
 
 SignVision is a full-stack web application that bridges the communication gap for the hearing-impaired community. It accepts **text or spoken voice input** and translates it into a sequence of **Indian Sign Language (ISL)** sign cards displayed visually in the browser.
